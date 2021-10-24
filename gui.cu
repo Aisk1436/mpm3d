@@ -105,7 +105,6 @@ namespace gui
     void render(const std::unique_ptr<mpm::Vector[]>& x)
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        glEnable(GL_MULTISAMPLE);
         double dot_size = 5.0;
 
         for (auto i = 0; i < mpm::n_particles; i++)
