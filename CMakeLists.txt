@@ -3,7 +3,7 @@ project(MPM3D CUDA)
 
 set(CMAKE_CUDA_STANDARD 17)
 
-add_executable(MPM3D main.cu mpm3d.cu)
+add_executable(MPM3D main.cu mpm3d.cu gui.cu)
 
 set_target_properties(MPM3D PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -11,6 +11,12 @@ set_target_properties(MPM3D PROPERTIES
 
 target_compile_options(MPM3D PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
         --expt-relaxed-constexpr --diag-suppress 20236,20012>)
+
+find_package(glfw3 3.3 REQUIRED)
+target_link_libraries(MPM3D LINK_PUBLIC glfw)
+
+find_package(OpenGL REQUIRED)
+target_link_libraries(MPM3D LINK_PUBLIC OpenGL::GL)
 
 if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
     target_compile_definitions(MPM3D PUBLIC EIGEN_NO_DEBUG)

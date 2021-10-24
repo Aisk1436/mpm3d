@@ -96,7 +96,7 @@ def T(a):
 
 
 init()
-# gui = ti.GUI('MPM3D', background_color=0x112F41)
+gui = ti.GUI('MPM3D', background_color=0x112F41)
 # while gui.running and not gui.get_event(gui.ESCAPE):
 import time
 
@@ -111,5 +111,5 @@ for runs in range(2048):
     #     writer = ti.PLYWriter(num_vertices=n_particles)
     #     writer.add_vertex_pos(pos[:, 0], pos[:, 1], pos[:, 2])
     #     writer.export_frame(gui.frame, export_file)
-    # gui.circles(T(pos), radius=1.5, color=0x66ccff)
-    # gui.show()
+    gui.circles(T(pos), radius=1.5, color=0x66ccff)
+    gui.show()

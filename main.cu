@@ -1,17 +1,26 @@
 #include <iostream>
 #include <chrono>
-#include "Eigen/Dense"
 #include "mpm3d.cuh"
+#include "gui.cuh"
+
+#define USE_GUI
 
 int main()
 {
+#ifdef USE_GUI
+    gui::init();
+#endif
+    mpm::init();
+
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    mpm::init();
     for (auto runs = 0; runs < 2048; runs++)
     {
         mpm::advance();
         auto x = mpm::to_numpy();
+#ifdef USE_GUI
+        gui::render(x);
+#endif
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();

@@ -51,60 +51,6 @@ namespace utils
     {
         return (thread_num + max_threads_per_block - 1) / max_threads_per_block;
     }
-
-//    template<class T, int Dim>
-//    class Matrix    // square matrix
-//    {
-//        std::array<T, Dim * Dim> mat;
-//
-//    public:
-//
-//        T& operator()(size_t x_dev, size_t y)
-//        {
-//            return mat[x_dev * Dim + y];
-//        }
-//
-//        const T& operator()(size_t x_dev, size_t y) const
-//        {
-//            return mat[x_dev * Dim + y];
-//        }
-//
-//        Matrix operator+=(Matrix&& rhs)
-//        {
-//            for (auto x_dev = 0; x_dev < Dim; x_dev++)
-//                for (auto y = 0; y < Dim; y++)
-//                {
-//                    mat[x_dev * Dim + y] += rhs(x_dev, y);
-//                }
-//        }
-//
-//        Matrix operator+=(T rhs)
-//        {
-//            for (auto x_dev = 0; x_dev < Dim; x_dev++)
-//                for (auto y = 0; y < Dim; y++)
-//                {
-//                    mat[x_dev * Dim + y] += rhs;
-//                }
-//        }
-//
-//
-//        Matrix operator*=(Matrix&& rhs)
-//        {
-//            for (auto x_dev = 0; x_dev < Dim; x_dev++)
-//                for (auto y = 0; y < Dim; y++)
-//                {
-//                    mat[x_dev * Dim + y] += rhs(x_dev, y);
-//                }
-//        }
-//
-//        Matrix operator*=(T rhs)
-//        {
-//            for (auto x_dev = 0; x_dev < Dim; x_dev++)
-//                for (auto y = 0; y < Dim; y++)
-//                {
-//                    mat[x_dev * Dim + y] *= rhs;
-//                }
-//        }    };
 } // namespace utils
 
 #endif //MPM3D_UTILS_H
