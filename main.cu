@@ -3,7 +3,7 @@
 #include "mpm3d.cuh"
 #include "gui.cuh"
 
-#define USE_GUI
+#define USE_GUI // comment this line to disable gui
 
 int main()
 {
