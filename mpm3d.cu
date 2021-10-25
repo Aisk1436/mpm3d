@@ -31,7 +31,7 @@ namespace mpm
     __device__ R narrow_cast(const A& a)
     {
         R r = R(a);
-        if (A(r) != a) printf("warning: info loss in narrow_cast");
+        if (A(r) != a) printf("warning: info loss in narrow_cast\n");
         return r;
     }
 
@@ -86,7 +86,7 @@ namespace mpm
         Matrix affine = Matrix::Identity() * stress + p_mass * C[idx];
         for (auto offset_idx = 0; offset_idx < neighbour; offset_idx++)
         {
-            Vectori offset = get_offset(offset_idx).array();
+            Vectori offset = get_offset(offset_idx);
             Vector dpos = (offset.cast<Real>() - fx) * dx;
             Real weight = 1.0;
             for (auto i = 0; i < dim; i++)
@@ -144,7 +144,7 @@ namespace mpm
         Matrix new_C = Matrix::Zero();
         for (auto offset_idx = 0; offset_idx < neighbour; offset_idx++)
         {
-            Vectori offset = get_offset(offset_idx).array();
+            Vectori offset = get_offset(offset_idx);
             Vector dpos = (offset.cast<Real>() - fx) * dx;
             Real weight = 1.0;
             for (auto i = 0; i < dim; i++)
@@ -184,11 +184,11 @@ namespace mpm
         cudaMalloc(&grid_m_dev, power(n_grid, dim) * sizeof(Real));
         cuda_check_error();
 
-        // initialize x on host and copy to device
+        // initialize x on the host and copy to the device
         auto x_host = std::make_unique<Vector[]>(n_particles);
         for (auto i = 0; i < n_particles; i++)
         {
-            for (int j = 0; j < dim; j++)
+            for (auto j = 0; j < dim; j++)
             {
                 x_host[i][j] = Real(rand_real());
             }
@@ -200,7 +200,7 @@ namespace mpm
         cudaDeviceProp prop{};
         cudaGetDeviceProperties(&prop, 0);
         threads_per_block = std::min(512, prop.maxThreadsPerBlock);
-        int block_num = get_block_num(n_particles,
+        auto block_num = get_block_num(n_particles,
                 threads_per_block);
         init_kernel<<<block_num, threads_per_block>>>(J_dev);
         cuda_check_error();
@@ -209,9 +209,9 @@ namespace mpm
     void advance()
     {
         auto T = steps;
-        int particle_block_num = get_block_num(n_particles,
+        auto particle_block_num = get_block_num(n_particles,
                 threads_per_block);
-        int grid_block_num = get_block_num(power(n_grid, dim),
+        auto grid_block_num = get_block_num(power(n_grid, dim),
                 threads_per_block);
         while (T--)
         {

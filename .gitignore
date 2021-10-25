@@ -461,3 +461,7 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+=======
+out
+.vs
+

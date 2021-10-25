@@ -24,9 +24,7 @@ namespace utils
 
     inline double rand_real(double min, double max)
     {
-        static std::random_device rd;
-        static std::default_random_engine gen(rd());
-
+        static std::default_random_engine gen{ std::random_device{}() };
         return std::uniform_real_distribution<>{ min, max }(gen);
     }
 

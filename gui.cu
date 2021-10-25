@@ -19,13 +19,13 @@ namespace gui
     void draw_dot(GLdouble x, GLdouble y, GLdouble size)
     {
         constexpr auto n_side = 8;
-        static GLdouble pi = 3.1415926;
         static GLdouble sin_tab[n_side];
         static GLdouble cos_tab[n_side];
 
         static auto init_flag = true;
         if (init_flag)
         {
+            GLdouble pi = 3.1415926;
             for (auto i = 0; i < n_side; i++)
             {
                 sin_tab[i] = sin(i * pi * 2 / n_side);
@@ -58,16 +58,15 @@ namespace gui
     template<class T>
     std::enable_if_t<std::is_same_v<T, Eigen::Vector3f> ||
                      std::is_same_v<T, Eigen::Vector3d>, std::tuple<mpm::Real, mpm::Real>>
-    transform(T a)
+    transform(const T& a)
     {
         using mpm::Real;
         using mpm::Vector;
         Real phi = 0.49;
         Real theta = 0.56;
-        a = a.array() - Real(0.5);
-        Real x = a[0];
-        Real y = a[1];
-        Real z = a[2];
+        Real x = a[0] - Real(0.5);
+        Real y = a[1] - Real(0.5);
+        Real z = a[2] - Real(0.5);
         Real c = std::cos(phi);
         Real s = std::sin(phi);
         Real C = std::cos(theta);
@@ -81,8 +80,6 @@ namespace gui
 
     void init()
     {
-        Eigen::Vector3f vec;
-        transform(vec);
         glfwSetErrorCallback(error_callback);
         if (!glfwInit())
         {
@@ -94,6 +91,7 @@ namespace gui
                 nullptr);
         if (!window)
         {
+            std::cerr << "glfwCreateWindow failure\n";
             glfwTerminate();
             exit(1);
         }
@@ -105,7 +103,7 @@ namespace gui
     void render(const std::unique_ptr<mpm::Vector[]>& x)
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        double dot_size = 5.0;
+        double dot_size = 6.0;
 
         for (auto i = 0; i < mpm::n_particles; i++)
         {
