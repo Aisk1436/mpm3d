@@ -3,7 +3,7 @@
 Implementing mpm3d, which was originally written in [Taichi](https://github.com/taichi-dev/taichi), using CUDA C++.
 
 You can change configures in mpm3d.cuh (e.g., change 'dim' from 3 to 2, or
-change 'Real' from float to double), it should compile correctly.
+change 'Real' from float to double). It should compile correctly.
 
 ## How to build
 
