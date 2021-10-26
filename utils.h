@@ -10,18 +10,6 @@
 
 namespace utils
 {
-    inline void cuda_check_error()
-    {
-        cudaDeviceSynchronize();
-        auto status = cudaGetLastError();
-        if (status != cudaSuccess)
-        {
-            std::cerr << cudaGetErrorName(status) << ": "
-                      << cudaGetErrorString(status);
-            exit(1);
-        }
-    }
-
     inline double rand_real(double min, double max)
     {
         static std::default_random_engine gen{ std::random_device{}() };

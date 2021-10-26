@@ -8,9 +8,11 @@ using namespace utils;
 
 namespace mpm
 {
-    constexpr __device__ int neighbour = power(3, dim);
-
-    constexpr __device__ Real dx = 1.0 / n_grid;
+    constexpr __device__ int dim_dev = dim, n_grid_dev = n_grid, steps_dev = steps;
+    constexpr __device__ Real dt_dev = dt;
+    constexpr __device__ int n_particles_dev = n_particles;
+    constexpr __device__ int neighbour = power(3, dim_dev);
+    constexpr __device__ Real dx = 1.0 / n_grid_dev;
     constexpr Real p_rho = 1.0;
     constexpr Real p_vol = power(dx * 0.5, 2);
     constexpr __device__ Real p_mass = p_vol * p_rho;
@@ -27,6 +29,19 @@ namespace mpm
 
     int threads_per_block;
 
+    inline void cuda_check_error()
+    {
+        cudaDeviceSynchronize();
+        auto status = cudaGetLastError();
+        if (status != cudaSuccess)
+        {
+
+            fmt::print(std::cerr, "{}: {}", cudaGetErrorName(status),
+                    cudaGetErrorString(status));
+            exit(1);
+        }
+    }
+
     template<class R, class A>
     __device__ R narrow_cast(const A& a)
     {
@@ -38,7 +53,7 @@ namespace mpm
     __device__ Vectori get_offset(size_t idx)
     {
         Vectori offset;
-        for (auto i = dim - 1; i >= 0; i--)
+        for (auto i = dim_dev - 1; i >= 0; i--)
         {
             offset[i] = narrow_cast<int, size_t>(idx % 3);
             idx /= 3;
@@ -49,10 +64,10 @@ namespace mpm
     __device__ Vectori get_indices(size_t idx)
     {
         Vectori indices;
-        for (auto i = dim - 1; i >= 0; i--)
+        for (auto i = dim_dev - 1; i >= 0; i--)
         {
-            indices[i] = narrow_cast<int, size_t>(idx % n_grid);
-            idx /= n_grid;
+            indices[i] = narrow_cast<int, size_t>(idx % n_grid_dev);
+            idx /= n_grid_dev;
         }
         return indices;
     }
@@ -82,14 +97,14 @@ namespace mpm
         std::array<Vector, 3> w{ 0.5 * (1.5 - fx.array()).pow(2),
                                  0.75 - (fx.array() - 1.0).pow(2),
                                  0.5 * (fx.array() - 0.5).pow(2) };
-        auto stress = -dt * 4 * E * p_vol * (J[idx] - 1) / std::pow(dx, 2);
+        auto stress = -dt_dev * 4 * E * p_vol * (J[idx] - 1) / std::pow(dx, 2);
         Matrix affine = Matrix::Identity() * stress + p_mass * C[idx];
         for (auto offset_idx = 0; offset_idx < neighbour; offset_idx++)
         {
             Vectori offset = get_offset(offset_idx);
             Vector dpos = (offset.cast<Real>() - fx) * dx;
             Real weight = 1.0;
-            for (auto i = 0; i < dim; i++)
+            for (auto i = 0; i < dim_dev; i++)
             {
                 weight *= w[offset[i]][i];
             }
@@ -98,11 +113,11 @@ namespace mpm
             auto grid_m_add = weight * p_mass;
             Vectori grid_idx_vector = base + offset;
             auto grid_idx = 0;
-            for (auto i = 0; i < dim; i++)
+            for (auto i = 0; i < dim_dev; i++)
             {
-                grid_idx = grid_idx * n_grid + grid_idx_vector[i];
+                grid_idx = grid_idx * n_grid_dev + grid_idx_vector[i];
             }
-            for (auto i = 0; i < dim; i++)
+            for (auto i = 0; i < dim_dev; i++)
             {
                 atomicAdd(&(grid_v[grid_idx][i]), grid_v_add[i]);
             }
@@ -117,12 +132,12 @@ namespace mpm
         {
             grid_v[idx] /= grid_m[idx];
         }
-        grid_v[idx][1] -= dt * gravity;
+        grid_v[idx][1] -= dt_dev * gravity;
         Vectori indices = get_indices(idx);
-        for (auto i = 0; i < dim; i++)
+        for (auto i = 0; i < dim_dev; i++)
         {
             if ((indices[i] < bound && grid_v[idx][i] < 0) ||
-                (indices[i] > n_grid - bound && grid_v[idx][i] > 0))
+                (indices[i] > n_grid_dev - bound && grid_v[idx][i] > 0))
             {
                 grid_v[idx][i] = 0;
             }
@@ -147,27 +162,27 @@ namespace mpm
             Vectori offset = get_offset(offset_idx);
             Vector dpos = (offset.cast<Real>() - fx) * dx;
             Real weight = 1.0;
-            for (auto i = 0; i < dim; i++)
+            for (auto i = 0; i < dim_dev; i++)
             {
                 weight *= w[offset[i]][i];
             }
             Vectori grid_idx_vector = base + offset;
             auto grid_idx = 0;
-            for (auto i = 0; i < dim; i++)
+            for (auto i = 0; i < dim_dev; i++)
             {
-                grid_idx = grid_idx * n_grid + grid_idx_vector[i];
+                grid_idx = grid_idx * n_grid_dev + grid_idx_vector[i];
             }
             new_v += weight * grid_v[grid_idx];
             new_C += 4.0 * weight * grid_v[grid_idx] * dpos.transpose() /
                      pow(dx, 2);
         }
         v[idx] = new_v;
-        x[idx] += dt * v[idx];
-        J[idx] *= Real(1.0) + dt * new_C.trace();
+        x[idx] += dt_dev * v[idx];
+        J[idx] *= Real(1.0) + dt_dev * new_C.trace();
         C[idx] = new_C;
     }
 
-    void init()
+    void init(std::shared_ptr<mpm::Vector[]> x_host)
     {
         cudaFree(x_dev);
         cudaFree(v_dev);
@@ -176,31 +191,34 @@ namespace mpm
         cudaFree(grid_v_dev);
         cudaFree(grid_m_dev);
 
-        cudaMalloc(&x_dev, n_particles * sizeof(Vector));
-        cudaMalloc(&v_dev, n_particles * sizeof(Vector));
-        cudaMalloc(&C_dev, n_particles * sizeof(Matrix));
-        cudaMalloc(&J_dev, n_particles * sizeof(Real));
-        cudaMalloc(&grid_v_dev, power(n_grid, dim) * sizeof(Vector));
-        cudaMalloc(&grid_m_dev, power(n_grid, dim) * sizeof(Real));
+        cudaMalloc(&x_dev, n_particles_dev * sizeof(Vector));
+        cudaMalloc(&v_dev, n_particles_dev * sizeof(Vector));
+        cudaMalloc(&C_dev, n_particles_dev * sizeof(Matrix));
+        cudaMalloc(&J_dev, n_particles_dev * sizeof(Real));
+        cudaMalloc(&grid_v_dev, power(n_grid_dev, dim_dev) * sizeof(Vector));
+        cudaMalloc(&grid_m_dev, power(n_grid_dev, dim_dev) * sizeof(Real));
         cuda_check_error();
 
-        // initialize x on the host and copy to the device
-        auto x_host = std::make_unique<Vector[]>(n_particles);
-        for (auto i = 0; i < n_particles; i++)
+        if (!x_host)
         {
-            for (auto j = 0; j < dim; j++)
+            x_host = std::make_unique<Vector[]>(n_particles_dev);
+            // initialize x on the host and copy to the device
+            for (auto i = 0; i < n_particles_dev; i++)
             {
-                x_host[i][j] = Real(rand_real());
+                for (auto j = 0; j < dim_dev; j++)
+                {
+                    x_host[i][j] = Real(rand_real());
+                }
+                x_host[i] = (x_host[i] * 0.4).array() + 0.15;
             }
-            x_host[i] = (x_host[i] * 0.4).array() + 0.15;
         }
-        cudaMemcpy(x_dev, x_host.get(), n_particles * sizeof(Vector),
+        cudaMemcpy(x_dev, x_host.get(), n_particles_dev * sizeof(Vector),
                 cudaMemcpyHostToDevice);
 
         cudaDeviceProp prop{};
         cudaGetDeviceProperties(&prop, 0);
         threads_per_block = std::min(512, prop.maxThreadsPerBlock);
-        auto block_num = get_block_num(n_particles,
+        auto block_num = get_block_num(n_particles_dev,
                 threads_per_block);
         init_kernel<<<block_num, threads_per_block>>>(J_dev);
         cuda_check_error();
@@ -208,10 +226,10 @@ namespace mpm
 
     void advance()
     {
-        auto T = steps;
-        auto particle_block_num = get_block_num(n_particles,
+        auto T = steps_dev;
+        auto particle_block_num = get_block_num(n_particles_dev,
                 threads_per_block);
-        auto grid_block_num = get_block_num(power(n_grid, dim),
+        auto grid_block_num = get_block_num(power(n_grid_dev, dim_dev),
                 threads_per_block);
         while (T--)
         {
@@ -233,10 +251,11 @@ namespace mpm
 
     std::unique_ptr<Vector[]> to_numpy()
     {
-        auto x_host = std::make_unique<Vector[]>(n_particles);
-        cudaMemcpy(x_host.get(), x_dev, n_particles * sizeof(Vector),
+        auto x_host = std::make_unique<Vector[]>(n_particles_dev);
+        cudaMemcpy(x_host.get(), x_dev, n_particles_dev * sizeof(Vector),
                 cudaMemcpyDeviceToHost);
         return x_host;
     }
+
 } // namespace mpm
 

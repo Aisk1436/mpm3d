@@ -2,7 +2,7 @@
 // Created by acacia on 10/25/21.
 //
 
-#include "gui.cuh"
+#include "gui.h"
 
 namespace gui
 {
