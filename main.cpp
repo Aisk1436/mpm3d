@@ -27,7 +27,8 @@ int main()
     using namespace std::chrono_literals;
     auto now = std::chrono::high_resolution_clock::now;
 
-    auto x_host = std::make_shared<mpm::Vector[]>(mpm::n_particles);
+    std::shared_ptr<mpm::Vector[]> x_init = std::make_unique<mpm::Vector[]>(
+            mpm::n_particles);
     auto ifs = std::ifstream(input_file_name);
     auto ofs = std::ofstream(output_file_name);
 
@@ -35,11 +36,11 @@ int main()
     {
         for (auto j = 0; j < mpm::dim; j++)
         {
-            ifs >> x_host[i][j];
+            ifs >> x_init[i][j];
         }
     }
-    
-    mpm::init(x_host);
+
+    mpm::init(x_init);
 
     decltype(mpm::to_numpy()) x_cuda;
     auto start_time = now();

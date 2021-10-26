@@ -182,7 +182,7 @@ namespace mpm
         C[idx] = new_C;
     }
 
-    void init(std::shared_ptr<mpm::Vector[]> x_host)
+    void init(std::shared_ptr<mpm::Vector[]> x_init)
     {
         cudaFree(x_dev);
         cudaFree(v_dev);
@@ -199,20 +199,20 @@ namespace mpm
         cudaMalloc(&grid_m_dev, power(n_grid_dev, dim_dev) * sizeof(Real));
         cuda_check_error();
 
-        if (!x_host)
+        if (!x_init)
         {
-            x_host = std::make_unique<Vector[]>(n_particles_dev);
+            x_init = std::make_unique<Vector[]>(n_particles_dev);
             // initialize x on the host and copy to the device
             for (auto i = 0; i < n_particles_dev; i++)
             {
                 for (auto j = 0; j < dim_dev; j++)
                 {
-                    x_host[i][j] = Real(rand_real());
+                    x_init[i][j] = Real(rand_real());
                 }
-                x_host[i] = (x_host[i] * 0.4).array() + 0.15;
+                x_init[i] = (x_init[i] * 0.4).array() + 0.15;
             }
         }
-        cudaMemcpy(x_dev, x_host.get(), n_particles_dev * sizeof(Vector),
+        cudaMemcpy(x_dev, x_init.get(), n_particles_dev * sizeof(Vector),
                 cudaMemcpyHostToDevice);
 
         cudaDeviceProp prop{};
