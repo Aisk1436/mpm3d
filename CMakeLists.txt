@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.20)
 project(MPM3D CUDA CXX)
 
 set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 add_subdirectory(fmt)
 
-add_executable(MPM3D main.cpp mpm3d.cu gui.cpp)
+add_executable(MPM3D main.cu mpm3d.cu gui.cu)
 
 set_target_properties(MPM3D PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON

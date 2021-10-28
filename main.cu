@@ -9,7 +9,7 @@
 
 #include <memory>
 #include <thread>
-#include "gui.h"
+#include "gui.cuh"
 
 constexpr int fps = 65;
 constexpr auto frame_interval = std::chrono::nanoseconds(int(1e9)) / fps;
