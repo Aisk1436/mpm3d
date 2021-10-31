@@ -4,6 +4,8 @@
 
 #include "mpm3d.cuh"
 
+#define UM_FLAG
+
 using namespace utils;
 
 namespace mpm
@@ -32,8 +34,7 @@ namespace mpm
         auto status = cudaGetLastError();
         if (status != cudaSuccess)
         {
-
-            fmt::print(std::cerr, "{}: {}", cudaGetErrorName(status),
+            fmt::print(std::cerr, "{}: {}\n", cudaGetErrorName(status),
                     cudaGetErrorString(status));
             exit(1);
         }
@@ -211,6 +212,15 @@ namespace mpm
         cudaFree(grid_v_dev);
         cudaFree(grid_m_dev);
 
+#ifdef UM_FLAG
+        cudaMallocManaged(&x_dev, n_particles * sizeof(Vector));
+        cudaMallocManaged(&v_dev, n_particles * sizeof(Vector));
+        cudaMallocManaged(&C_dev, n_particles * sizeof(Matrix));
+        cudaMallocManaged(&J_dev, n_particles * sizeof(Real));
+        cudaMallocManaged(&grid_v_dev, power(n_grid, dim) * sizeof(Vector));
+        cudaMallocManaged(&grid_m_dev, power(n_grid, dim) * sizeof(Real));
+        cuda_check_error();
+#else
         cudaMalloc(&x_dev, n_particles * sizeof(Vector));
         cudaMalloc(&v_dev, n_particles * sizeof(Vector));
         cudaMalloc(&C_dev, n_particles * sizeof(Matrix));
@@ -218,6 +228,7 @@ namespace mpm
         cudaMalloc(&grid_v_dev, power(n_grid, dim) * sizeof(Vector));
         cudaMalloc(&grid_m_dev, power(n_grid, dim) * sizeof(Real));
         cuda_check_error();
+#endif
 
         if (!x_init)
         {
@@ -232,8 +243,15 @@ namespace mpm
                 x_init[i] = (x_init[i] * 0.4).array() + 0.15;
             }
         }
+#ifdef UM_FLAG
+        for (auto i = 0; i < n_particles; i++)
+        {
+            x_dev[i] = x_init[i];
+        }
+#else
         cudaMemcpy(x_dev, x_init.get(), n_particles * sizeof(Vector),
                 cudaMemcpyHostToDevice);
+#endif
 
         cudaDeviceProp prop{};
         cudaGetDeviceProperties(&prop, 0);
@@ -264,11 +282,15 @@ namespace mpm
         }
     }
 
-    std::unique_ptr<Vector[]> to_numpy()
+    Vector* to_numpy()
     {
-        auto x_host = std::make_unique<Vector[]>(n_particles);
-        cudaMemcpy(x_host.get(), x_dev, n_particles * sizeof(Vector),
+#ifdef UM_FLAG
+        auto& x_host = x_dev;
+#else
+        auto x_host = new Vector[n_particles];
+        cudaMemcpy(x_host, x_dev, n_particles * sizeof(Vector),
                 cudaMemcpyDeviceToHost);
+#endif
         return x_host;
     }
 

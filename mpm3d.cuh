@@ -39,7 +39,7 @@ namespace mpm
 
     void advance();
 
-    std::unique_ptr<Vector[]> to_numpy();     // dummy
+    Vector* to_numpy();     // dummy
 }
 
 #endif //MPM3D_MPM3D_CUH

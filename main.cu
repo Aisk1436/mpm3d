@@ -4,7 +4,7 @@
 #include <fmt/core.h>
 #include "mpm3d.cuh"
 
-#define USE_GUI // comment this line to disable gui
+//#define USE_GUI // comment this line to disable gui
 #ifdef USE_GUI
 
 #include <memory>
@@ -51,7 +51,12 @@ int main()
 #endif
         mpm::advance();
         x_cuda = mpm::to_numpy();
-        (void)x_cuda;
+        auto x_copy = new std::remove_pointer_t<decltype(x_cuda)>[mpm::n_particles];
+        for (auto i = 0; i < mpm::n_particles; i++)
+        {
+            x_copy[i] = x_cuda[i];
+//            x_cuda[i].array() += 0.000001;
+        }
 #ifdef USE_GUI
         gui::render(x_cuda);
         // limit fps
