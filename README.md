@@ -1,15 +1,19 @@
 # mpm3d
 
-Implementing mpm3d, which was originally written in [Taichi](https://github.com/taichi-dev/taichi), using CUDA C++.
+Implementing mpm3d using CUDA C++. 
+
+The [mpm3d](https://github.com/taichi-dev/taichi/blob/ae61418d66b79c4af2173acb00ba8a8b28b5dd54/python/taichi/examples/simulation/mpm3d.py) was originally written in [Taichi](https://github.com/taichi-dev/taichi).
 
 You can change configures in mpm3d.cuh (e.g., change 'dim' from 3 to 2, or
 change 'Real' from float to double). It should compile correctly.
 
 ## How to build
 
-If you don't need gui, you can delete gui.cu and gui.cuh, remove gui from main.cu,  and remove gui.cu and glfw from CMakeList.txt. 
+Please clone the repository recursively.
 
-In this case, you don't need to install glfw.
+```
+git clone --recursive https://github.com/jiajunhanh/mpm3d.git
+```
 
 ### Windows
 
@@ -18,24 +22,11 @@ Open this project with either Visual Studio or CLion.
 See [CUDA projects in CLion
 ](https://www.jetbrains.com/help/clion/cuda-projects.html).
 
-Make sure you have the newest version of MSVC, or you may get error when building Eigen.
+Make sure you have the newest version of MSVC, or you may get errors when building Eigen.
 
-You need to install glfw using [vcpkg](https://github.com/microsoft/vcpkg).
+### Linux
 
-```
-./vcpkg install glfw3:x64-windows
-./vcpkg integrate install
-```
-
-### Ubuntu
-
-Install glfw first.
-
-```
-sudo apt install libglfw3-dev
-```
-
-Then you can open this project with CLion (recommended).
+You can open this project with CLion (recommended).
 
 See [CUDA projects in CLion
 ](https://www.jetbrains.com/help/clion/cuda-projects.html).
@@ -54,6 +45,4 @@ make run-release
 make run-debug
 ```
 
-Make sure you have installed CMake and added it to PATH, otherwise you need to 
-
-set 'CMAKE' in the Makefile to the path to the CMake executable.
+Make sure you have installed [CMake](https://cmake.org/).
