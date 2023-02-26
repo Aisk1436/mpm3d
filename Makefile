@@ -3,7 +3,7 @@ RELEASE = -DCMAKE_BUILD_TYPE=Release
 DEBUG = -DCMAKE_BUILD_TYPE=Debug
 SRC = .
 BUILD = cmake-build
-TARGET = MPM3D
+TARGET = mpm3d
 
 setup-release:
 	${CMAKE} ${RELEASE} -S ${SRC} -B ${BUILD}-release 

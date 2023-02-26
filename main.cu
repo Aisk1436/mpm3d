@@ -4,7 +4,7 @@
 #include <fmt/core.h>
 #include "mpm3d.cuh"
 
-//#define USE_GUI // comment this line to disable gui
+#define USE_GUI // comment this line to disable gui
 #ifdef USE_GUI
 
 #include <memory>
@@ -19,60 +19,61 @@ constexpr auto frame_interval = std::chrono::nanoseconds(int(1e9)) / fps;
 constexpr auto input_file_name = "../py/x_init";
 constexpr auto output_file_name = "../py/x_cuda";
 
-int main()
-{
+template<typename T>
+struct fmt::formatter<
+    T,
+    std::enable_if_t<
+        std::is_base_of_v<Eigen::DenseBase<T>, T>,
+        char>> : ostream_formatter {
+};
+
+int main() {
 #ifdef USE_GUI
-    gui::init();
+  gui::init();
 #endif
-    using namespace std::chrono_literals;
-    auto now = std::chrono::high_resolution_clock::now;
+  using namespace std::chrono_literals;
+  auto now = std::chrono::high_resolution_clock::now;
 
-    std::shared_ptr<mpm::Vector[]> x_init = std::make_unique<mpm::Vector[]>(
-            mpm::n_particles);
-    auto ifs = std::ifstream(input_file_name);
-    auto ofs = std::ofstream(output_file_name);
+  std::shared_ptr<mpm::Vector[]> x_init = std::make_unique<mpm::Vector[]>(
+      mpm::n_particles);
+  auto ifs = std::ifstream(input_file_name);
+  auto ofs = std::ofstream(output_file_name);
 
-    for (auto i = 0; i < mpm::n_particles; i++)
-    {
-        for (auto j = 0; j < mpm::dim; j++)
-        {
-            ifs >> x_init[i][j];
-        }
+  for (auto i = 0; i < mpm::n_particles; i++) {
+    for (auto j = 0; j < mpm::dim; j++) {
+      ifs >> x_init[i][j];
     }
+  }
 
-    mpm::init(x_init);
+  mpm::init(x_init);
 
-    decltype(mpm::to_numpy()) x_cuda;
-    auto start_time = now();
-    for (auto runs = 0; runs < 2048; runs++)
-    {
+  decltype(mpm::to_numpy()) x_cuda;
+  auto start_time = now();
+  for (auto runs = 0; runs < 2048; runs++) {
 #ifdef USE_GUI
-        auto frame_start = now();
+    auto frame_start = now();
 #endif
-        mpm::advance();
-        x_cuda = mpm::to_numpy();
-        auto x_copy = new std::remove_pointer_t<decltype(x_cuda)>[mpm::n_particles];
-        for (auto i = 0; i < mpm::n_particles; i++)
-        {
-            x_copy[i] = x_cuda[i];
-//            x_cuda[i].array() += 0.000001;
-        }
+    mpm::advance();
+    x_cuda = mpm::to_numpy();
+    auto x_copy = new std::remove_pointer_t<decltype(x_cuda)>[mpm::n_particles];
+    for (auto i = 0; i < mpm::n_particles; i++) {
+      x_copy[i] = x_cuda[i];
+      x_cuda[i].array() += 0.000001;
+    }
 #ifdef USE_GUI
-        gui::render(x_cuda);
-        // limit fps
-        auto rest_time = frame_interval - (now() - frame_start);
-        if (rest_time.count() > 0)
-        {
-            std::this_thread::sleep_for(rest_time); // not very precise
-        }
+    gui::render(x_cuda);
+    // limit fps
+    auto rest_time = frame_interval - (now() - frame_start);
+    if (rest_time.count() > 0) {
+      std::this_thread::sleep_for(rest_time); // not very precise
+    }
 #endif
-    }
-    auto used_time = (now() - start_time) / 1ns;
-    std::cout << double(used_time) / 1e9 << "s\n";
+  }
+  auto used_time = (now() - start_time) / 1ns;
+  std::cout << double(used_time) / 1e9 << "s\n";
 
-    for (auto i = 0; i < mpm::n_particles; i++)
-    {
-        fmt::print(ofs, "{}: [{}]\n", i, x_cuda[i].transpose());
-    }
-    return 0;
+  for (auto i = 0; i < mpm::n_particles; i++) {
+    fmt::print(ofs, "{}: [{}]\n", i, x_cuda[i].transpose());
+  }
+  return 0;
 }
