@@ -27,6 +27,6 @@ __device__ __host__ constexpr T power(T a, std::size_t n) {
 inline int get_block_num(int thread_num, int max_threads_per_block) {
   return (thread_num + max_threads_per_block - 1) / max_threads_per_block;
 }
-} // namespace utils
+}// namespace utils
 
-#endif //MPM3D_UTILS_H
+#endif//MPM3D_UTILS_H

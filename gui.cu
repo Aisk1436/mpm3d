@@ -38,15 +38,13 @@ void draw_dot(GLdouble x, GLdouble y, GLdouble size) {
 }
 
 template<class T>
-std::enable_if_t<std::is_same_v<T, Eigen::Vector2f> ||
-    std::is_same_v<T, Eigen::Vector2d>, std::tuple<mpm::Real, mpm::Real>>
+std::enable_if_t<std::is_same_v<T, Eigen::Vector2f> || std::is_same_v<T, Eigen::Vector2d>, std::tuple<mpm::Real, mpm::Real>>
 transform(const T &a) {
   return {a[0], a[1]};
 }
 
 template<class T>
-std::enable_if_t<std::is_same_v<T, Eigen::Vector3f> ||
-    std::is_same_v<T, Eigen::Vector3d>, std::tuple<mpm::Real, mpm::Real>>
+std::enable_if_t<std::is_same_v<T, Eigen::Vector3f> || std::is_same_v<T, Eigen::Vector3d>, std::tuple<mpm::Real, mpm::Real>>
 transform(const T &a) {
   using mpm::Real;
   using mpm::Vector;
@@ -98,4 +96,4 @@ void render(const mpm::Vector *x) {
   glfwSwapBuffers(window);
   glfwPollEvents();
 }
-} // namespace gui
+}// namespace gui

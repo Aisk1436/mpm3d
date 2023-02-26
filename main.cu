@@ -1,15 +1,15 @@
-#include <iostream>
-#include <fstream>
+#include "mpm3d.cuh"
 #include <chrono>
 #include <fmt/core.h>
-#include "mpm3d.cuh"
+#include <fstream>
+#include <iostream>
 
-#define USE_GUI // comment this line to disable gui
+#define USE_GUI// comment this line to disable gui
 #ifdef USE_GUI
 
+#include "gui.cuh"
 #include <memory>
 #include <thread>
-#include "gui.cuh"
 
 constexpr int fps = 65;
 constexpr auto frame_interval = std::chrono::nanoseconds(int(1e9)) / fps;
@@ -65,7 +65,7 @@ int main() {
     // limit fps
     auto rest_time = frame_interval - (now() - frame_start);
     if (rest_time.count() > 0) {
-      std::this_thread::sleep_for(rest_time); // not very precise
+      std::this_thread::sleep_for(rest_time);// not very precise
     }
 #endif
   }

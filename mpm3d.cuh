@@ -1,12 +1,12 @@
 #ifndef MPM3D_MPM3D_CUH
 #define MPM3D_MPM3D_CUH
 
-#include <memory>
+#include "Eigen/Dense"
+#include "utils.h"
 #include <cuda_runtime.h>
 #include <fmt/core.h>
 #include <fmt/ostream.h>
-#include "Eigen/Dense"
-#include "utils.h"
+#include <memory>
 
 namespace mpm {
 using Real = float;
@@ -46,7 +46,7 @@ void init(std::shared_ptr<mpm::Vector[]> = nullptr);
 
 void advance();
 
-Vector *to_numpy();     // dummy
-}
+Vector *to_numpy();// dummy
+}// namespace mpm
 
-#endif //MPM3D_MPM3D_CUH
+#endif//MPM3D_MPM3D_CUH

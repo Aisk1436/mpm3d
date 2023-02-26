@@ -33,9 +33,8 @@ inline void cuda_check_error() {
   }
 }
 
-template<class T, class ...A>
-void
-cuda_launch_kernel(T func, int n_thread, A &...args) {
+template<class T, class... A>
+void cuda_launch_kernel(T func, int n_thread, A &...args) {
   int grid_size;
   int block_size;
   int min_grid_size;
@@ -117,10 +116,10 @@ particle_to_grid_kernel(Vector *x, Vector *v, Matrix *C, const Real *J,
     }
     for (auto i = 0; i < dim; i++) {
       atomicAdd(&(grid_v[grid_idx][i]), grid_v_add[i]);
-//                grid_v[grid_idx][i] += grid_v_add[i];
+      //                grid_v[grid_idx][i] += grid_v_add[i];
     }
     atomicAdd(&(grid_m[grid_idx]), grid_m_add);
-//            grid_m[grid_idx] += grid_m_add;
+    //            grid_m[grid_idx] += grid_m_add;
   }
 }
 
@@ -133,8 +132,7 @@ __global__ void grid_update_kernel(Vector *grid_v, Real *grid_m) {
   grid_v[idx][1] -= dt * gravity;
   Vectori indices = get_indices(idx);
   for (auto i = 0; i < dim; i++) {
-    if ((indices[i] < bound && grid_v[idx][i] < 0) ||
-        (indices[i] > n_grid - bound && grid_v[idx][i] > 0)) {
+    if ((indices[i] < bound && grid_v[idx][i] < 0) || (indices[i] > n_grid - bound && grid_v[idx][i] > 0)) {
       grid_v[idx][i] = 0;
     }
   }
@@ -166,8 +164,7 @@ grid_to_particle_kernel(Vector *x, Vector *v, Matrix *C, Real *J,
       grid_idx = grid_idx * n_grid + grid_idx_vector[i];
     }
     new_v += weight * grid_v[grid_idx];
-    new_C += 4.0 * weight * grid_v[grid_idx] * dpos.transpose() /
-        pow(dx, 2);
+    new_C += 4.0 * weight * grid_v[grid_idx] * dpos.transpose() / pow(dx, 2);
   }
   v[idx] = new_v;
   x[idx] += dt * v[idx];
@@ -217,7 +214,7 @@ void init(std::shared_ptr<mpm::Vector[]> x_init) {
   }
 #else
   cudaMemcpy(x_dev, x_init.get(), n_particles * sizeof(Vector),
-          cudaMemcpyHostToDevice);
+             cudaMemcpyHostToDevice);
 #endif
 
   cudaDeviceProp prop{};
@@ -253,10 +250,9 @@ Vector *to_numpy() {
 #else
   auto x_host = new Vector[n_particles];
   cudaMemcpy(x_host, x_dev, n_particles * sizeof(Vector),
-          cudaMemcpyDeviceToHost);
+             cudaMemcpyDeviceToHost);
 #endif
   return x_host;
 }
 
-} // namespace mpm
-
+}// namespace mpm
